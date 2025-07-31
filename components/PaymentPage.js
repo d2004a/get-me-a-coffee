@@ -99,7 +99,7 @@ const PaymentPage = ({ username }) => {
                 pauseOnHover
                 theme="light" />
             {/* Same as */}
-            <ToastContainer />
+            
             <Script src="https://checkout.razorpay.com/v1/checkout.js"></Script>
 
 
