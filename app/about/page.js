@@ -21,7 +21,7 @@ const About = () => {
                 <div className="flex items-center mb-6">
                     <img className="w-20 h-20 rounded-full mr-4" src="/coin.gif" alt="Support Through Chai" />
                     <div>
-                        <h3 className="text-xl font-semibold mb-2">Support Through Chai</h3>
+                        <h3 className="text-xl font-semibold mb-2">Support Through Coffee</h3>
                         <p>Receive support from your fans in the form of chai purchases, directly contributing to your project funding.</p>
                     </div>
                 </div>
