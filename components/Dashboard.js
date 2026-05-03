@@ -6,7 +6,7 @@ import { fetchuser, updateProfile } from '@/actions/useractions'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
-import { Save, User as UserIcon, Mail, AtSign, Image as ImageIcon, CreditCard, ShieldCheck } from 'lucide-react';
+import { Save, User as UserIcon, Mail, AtSign, Image as ImageIcon, CreditCard, ShieldCheck, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Dashboard = () => {
@@ -34,6 +34,22 @@ const Dashboard = () => {
 
     const handleChange = (e) => {
         setform({ ...form, [e.target.name]: e.target.value })
+    }
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error("File is too large! Please choose an image under 2MB.")
+                return
+            }
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setform({ ...form, [e.target.name]: e.target.name === 'profilepic' ? reader.result : reader.result })
+                setform(prev => ({ ...prev, [e.target.name]: reader.result }))
+            }
+            reader.readAsDataURL(file)
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -104,19 +120,33 @@ const Dashboard = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-400 ml-1">Profile Picture URL</label>
-                                <div className="relative">
-                                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                    <input value={form.profilepic || ""} onChange={handleChange} type="text" name='profilepic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="https://..." />
+                                <label className="text-sm font-medium text-slate-400 ml-1">Profile Picture</label>
+                                <div className="flex gap-4">
+                                    <div className="relative flex-1">
+                                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                        <input value={form.profilepic || ""} onChange={handleChange} type="text" name='profilepic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="URL or upload ->" />
+                                    </div>
+                                    <label className="flex items-center justify-center gap-2 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer transition-all shadow-lg shadow-indigo-500/20 whitespace-nowrap">
+                                        <Upload className="w-4 h-4" />
+                                        <span>Upload</span>
+                                        <input type="file" name="profilepic" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                    </label>
                                 </div>
                             </div>
                         </div>
 
                         <div className="mt-6 space-y-2">
-                            <label className="text-sm font-medium text-slate-400 ml-1">Cover Image URL</label>
-                            <div className="relative">
-                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                <input value={form.coverpic || ""} onChange={handleChange} type="text" name='coverpic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="https://..." />
+                            <label className="text-sm font-medium text-slate-400 ml-1">Cover Image</label>
+                            <div className="flex gap-4">
+                                <div className="relative flex-1">
+                                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.coverpic || ""} onChange={handleChange} type="text" name='coverpic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="URL or upload ->" />
+                                </div>
+                                <label className="flex items-center justify-center gap-2 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer transition-all border border-white/5 whitespace-nowrap">
+                                    <Upload className="w-4 h-4" />
+                                    <span>Upload</span>
+                                    <input type="file" name="coverpic" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                </label>
                             </div>
                         </div>
 
