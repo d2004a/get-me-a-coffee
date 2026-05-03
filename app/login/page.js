@@ -40,6 +40,7 @@ const Login = () => {
         redirect: false,
         email: formData.email,
         password: formData.password,
+        callbackUrl: "/dashboard"
       });
 
       if (res.error) {
@@ -167,14 +168,14 @@ const Login = () => {
 
           <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={() => signIn("google")}
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                   className="flex items-center justify-center gap-2 py-3 rounded-xl glass border-white/10 hover:bg-white/5 transition-all group"
                 >
                   <Globe className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium">Google</span>
                 </button>
             <button 
-              onClick={() => signIn("github")}
+              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
               className="flex items-center justify-center gap-2 py-3 rounded-xl glass border-white/10 hover:bg-white/5 transition-all group"
             >
               <User className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
