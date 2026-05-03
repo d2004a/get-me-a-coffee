@@ -21,7 +21,7 @@ const Login = () => {
   });
 
   useEffect(() => {
-    document.title = isLogin ? "Login - ChaiFund" : "Sign Up - ChaiFund";
+    document.title = isLogin ? "Login - get-me-a-coffee" : "Sign Up - get-me-a-coffee";
     if (session) {
       router.push("/dashboard");
     }
