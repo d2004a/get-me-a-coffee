@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Coffee, Rocket, Users, Globe, ArrowRight, Heart, Sparkles, TrendingUp, Search as SearchIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fetchFeaturedCreators } from "@/actions/useractions";
@@ -130,12 +131,12 @@ export default function Home() {
                   <Link href={`/${creator.username}`}>
                     <div className="glass-card rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all overflow-hidden h-full flex flex-col">
                       <div className="h-32 relative">
-                         <img src={creator.coverpic || "/cover.jpg"} alt="" className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-500" />
+                         <Image unoptimized src={creator.coverpic || "/cover.jpg"} alt="" width={400} height={128} className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-500" />
                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
                       </div>
                       <div className="px-8 pb-8 flex-1 flex flex-col items-center -mt-12 relative z-10">
                         <div className="w-24 h-24 rounded-3xl border-4 border-slate-950 overflow-hidden bg-slate-900 mb-4 shadow-2xl">
-                          <img src={creator.profilepic || "/avatar.gif"} alt="" className="w-full h-full object-cover" />
+                          <Image unoptimized src={creator.profilepic || "/avatar.gif"} alt="" width={96} height={96} className="w-full h-full object-cover" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-1">{creator.name}</h3>
                         <p className="text-indigo-400 text-sm font-medium mb-4">@{creator.username}</p>

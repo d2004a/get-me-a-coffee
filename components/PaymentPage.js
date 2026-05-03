@@ -8,6 +8,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Coffee, Heart, MessageCircle, DollarSign, User, ShieldCheck, Sparkles, Trophy, Calendar } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -92,14 +93,20 @@ const PaymentPage = ({ username }) => {
       <div className="min-h-screen relative overflow-hidden">
         {/* Immersive Cover Image */}
         <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
-          <motion.img 
+          <motion.div
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1.5 }}
-            src={currentUser.coverpic || "/cover.jpg"} 
-            className="w-full h-full object-cover opacity-60"
-            alt="cover" 
-          />
+            className="w-full h-full"
+          >
+            <Image 
+              unoptimized 
+              src={currentUser.coverpic || "/cover.jpg"} 
+              alt="cover" 
+              fill
+              className="object-cover opacity-60"
+            />
+          </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
           
           {/* Animated Particles Overlay */}
@@ -128,9 +135,9 @@ const PaymentPage = ({ username }) => {
                 </div>
                 
                 <div className="relative inline-block mb-6">
-                   <div className="w-32 h-32 rounded-3xl border-4 border-slate-950 overflow-hidden shadow-2xl mx-auto bg-slate-900 group">
-                     <img src={currentUser.profilepic || "/avatar.gif"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="profile" />
-                   </div>
+                    <div className="w-32 h-32 rounded-3xl border-4 border-slate-950 overflow-hidden shadow-2xl mx-auto bg-slate-900 group relative">
+                      <Image unoptimized src={currentUser.profilepic || "/avatar.gif"} alt="profile" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                    </div>
                    <motion.div 
                      animate={{ rotate: 360 }}
                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -156,7 +163,7 @@ const PaymentPage = ({ username }) => {
                 </div>
 
                 <p className="text-slate-400 text-sm leading-relaxed text-left italic">
-                  "{currentUser.description || `Hi! I'm creating amazing content and would love your support to keep going. Every chai counts! ☕`}"
+                  &quot;{currentUser.description || `Hi! I'm creating amazing content and would love your support to keep going. Every coffee counts! ☕`}&quot;
                 </p>
               </div>
 
@@ -185,7 +192,7 @@ const PaymentPage = ({ username }) => {
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                     <Coffee className="w-5 h-5 text-amber-500" />
                   </div>
-                  <h2 className="text-2xl font-black text-white">Buy a Chai</h2>
+                  <h2 className="text-2xl font-black text-white">Buy a Coffee</h2>
                 </div>
 
                 <div className="grid gap-6 mb-8">
@@ -276,7 +283,7 @@ const PaymentPage = ({ username }) => {
                                  ₹{p.amount}
                                </div>
                             </div>
-                            <p className="text-slate-400 text-sm italic">"{p.message}"</p>
+                            <p className="text-slate-400 text-sm italic">&quot;{p.message}&quot;</p>
                           </div>
                         </motion.div>
                       ))

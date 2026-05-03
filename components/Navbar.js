@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useSession, signOut } from "next-auth/react"
 import Link from 'next/link'
 import { User, LogOut, LayoutDashboard, Coffee, Menu, X, ChevronDown, Search } from 'lucide-react'
@@ -93,7 +94,7 @@ const Navbar = () => {
                       className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
                     >
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800">
-                        <img src={creator.profilepic || "/avatar.gif"} alt="" className="w-full h-full object-cover" />
+                        <Image unoptimized src={creator.profilepic || "/avatar.gif"} alt="" width={32} height={32} className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white">{creator.name}</p>
@@ -124,7 +125,7 @@ const Navbar = () => {
                 >
                   <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 overflow-hidden">
                     {session.user.image ? (
-                        <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                        <Image unoptimized src={session.user.image} alt="" width={32} height={32} className="w-full h-full object-cover" />
                     ) : (
                         <User className="w-4 h-4 text-indigo-300" />
                     )}
@@ -213,7 +214,7 @@ const Navbar = () => {
                                 className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
                             >
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800">
-                                    <img src={creator.profilepic || "/avatar.gif"} alt="" className="w-full h-full object-cover" />
+                                    <Image unoptimized src={creator.profilepic || "/avatar.gif"} alt="" width={32} height={32} className="w-full h-full object-cover" />
                                 </div>
                                 <p className="text-sm font-bold text-white">{creator.name}</p>
                             </Link>

@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useSession } from "next-auth/react"
 import { useRouter } from 'next/navigation'
 import { fetchuser, updateProfile } from '@/actions/useractions'
@@ -15,22 +15,22 @@ const Dashboard = () => {
     const [form, setform] = useState({})
     const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        if (!session) {
-            router.push('/login')
-        } else {
-            getData()
-        }
-    }, [session, router])
-
-    const getData = async () => {
+    const getData = useCallback(async () => {
         try {
             let u = await fetchuser(session.user.name)
             setform(u || {})
         } catch (error) {
             console.error("Failed to load user data:", error)
         }
-    }
+    }, [session?.user?.name])
+
+    useEffect(() => {
+        if (!session) {
+            router.push('/login')
+        } else {
+            getData()
+        }
+    }, [session, router, getData])
 
     const handleChange = (e) => {
         setform({ ...form, [e.target.name]: e.target.value })
