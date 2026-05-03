@@ -1,173 +1,296 @@
 "use client"
-import React, { useEffect, useState } from 'react'
-import Script from 'next/script'
+import React, { useEffect, useState, useCallback } from 'react'
+import Razorpay from 'razorpay'
 import { useSession } from 'next-auth/react'
-import { fetchuser, fetchpayments, initiate } from '@/actions/useractions'
+import { fetchpayments, fetchuser, initiate } from '@/actions/useractions'
 import { useSearchParams } from 'next/navigation'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import { useRouter } from 'next/navigation'
-import { notFound } from "next/navigation"
+import { Coffee, Heart, MessageCircle, DollarSign, User, ShieldCheck, Sparkles, Trophy, Calendar } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const PaymentPage = ({ username }) => {
-    // const { data: session } = useSession()
+  const { data: session } = useSession()
+  const [paymentform, setPaymentform] = useState({ name: "", message: "", amount: "" })
+  const [currentUser, setcurrentUser] = useState({})
+  const [payments, setPayments] = useState([])
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
-    const [paymentform, setPaymentform] = useState({name: "", message: "", amount: ""})
-    const [currentUser, setcurrentUser] = useState({})
-    const [payments, setPayments] = useState([])
-    const searchParams = useSearchParams()
-    const router = useRouter()
-
-    useEffect(() => {
-        getData()
-    }, [])
-
-    useEffect(() => {
-        if(searchParams.get("paymentdone") == "true"){
-        toast('Thanks for your donation!', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            transition: Bounce,
-            });
-        }
-        router.push(`/${username}`)
-     
-    }, [])
-    
-
-    const handleChange = (e) => {
-        setPaymentform({ ...paymentform, [e.target.name]: e.target.value })
+  const getData = useCallback(async () => {
+    try {
+        let u = await fetchuser(username);
+        setcurrentUser(u || {});
+        let dbpayments = await fetchpayments(username);
+        setPayments(dbpayments || []);
+    } catch (error) {
+        console.error("Failed to load payment page data:", error)
     }
+  }, [username]);
 
-    const getData = async () => {
-        let u = await fetchuser(username)
-        setcurrentUser(u)
-        let dbpayments = await fetchpayments(username)
-        setPayments(dbpayments) 
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  useEffect(() => {
+    if (searchParams.get("paymentdone") === "true") {
+      toast.success('Thanks for your support! ❤️', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        theme: "dark",
+        transition: Bounce,
+      });
+      router.push(`/${username}`)
     }
+  }, [searchParams, username, router]);
 
+  const handleChange = (e) => {
+    setPaymentform({ ...paymentform, [e.target.name]: e.target.value })
+  }
 
-    const pay = async (amount) => {
-        // Get the order Id 
-        let a = await initiate(amount, username, paymentform)
+  const pay = async (amount) => {
+    if (!amount && !paymentform.amount) {
+        toast.warn("Please enter or select an amount");
+        return;
+    }
+    const finalAmount = amount ? amount * 100 : paymentform.amount * 100;
+
+    try {
+        let a = await initiate(finalAmount, username, paymentform)
         let orderId = a.id
         var options = {
-            "key": currentUser.razorpayid, // Enter the Key ID generated from the Dashboard
-            "amount": amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "key": currentUser.razorpayid,
+            "amount": finalAmount,
             "currency": "INR",
-            "name": "Get Me A Coffee", //your business name
-            "description": "Test Transaction",
-            "image": "https://example.com/your_logo",
-            "order_id": orderId, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "name": "ChaiFund",
+            "description": `Support ${username}`,
+            "image": currentUser.profilepic || "/logo.png",
+            "order_id": orderId,
             "callback_url": `${process.env.NEXT_PUBLIC_URL}/api/razorpay`,
-            "prefill": { //We recommend using the prefill parameter to auto-fill customer's contact information especially their phone number
-                "name": "Gaurav Kumar", //your customer's name
-                "email": "gaurav.kumar@example.com",
-                "contact": "9000090000" //Provide the customer's phone number for better conversion rates 
+            "prefill": {
+                "name": session?.user?.name || "",
+                "email": session?.user?.email || "",
             },
-            "notes": {
-                "address": "Razorpay Corporate Office"
-            },
-            "theme": {
-                "color": "#3399cc"
-            }
+            "theme": { "color": "#4f46e5" }
         }
-
-        var rzp1 = new Razorpay(options);
+        var rzp1 = new window.Razorpay(options);
         rzp1.open();
+    } catch (error) {
+        toast.error("Payment initiation failed. Please try again.");
+        console.error(error);
     }
+  }
 
-    
-    return (
-        <>
-            <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light" />
-            {/* Same as */}
+  return (
+    <>
+      <ToastContainer />
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Immersive Cover Image */}
+        <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
+          <motion.img 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5 }}
+            src={currentUser.coverpic || "/cover.jpg"} 
+            className="w-full h-full object-cover opacity-60"
+            alt="cover" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          
+          {/* Animated Particles Overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-20">
+             <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" />
+             <div className="absolute top-1/2 right-1/3 w-1 h-1 bg-white rounded-full animate-pulse" />
+             <div className="absolute bottom-1/4 left-1/2 w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" />
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 -mt-32 relative z-10 pb-20">
+          <div className="grid lg:grid-cols-3 gap-8">
             
-            <Script src="https://checkout.razorpay.com/v1/checkout.js"></Script>
-
-
-            <div className='cover w-full bg-red-50 relative'>
-                <img className='object-cover w-full h-48 md:h-[350px] shadow-blue-700 shadow-sm' src={currentUser.coverpic} alt="" />
-                <div className='absolute -bottom-20 right-[33%] md:right-[46%] border-white overflow-hidden border-2 rounded-full size-36'>
-                    <img className='rounded-full object-cover size-36' width={128} height={128} src={currentUser.profilepic} alt="" />
+            {/* Left Column: Profile Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-1 space-y-6"
+            >
+              <div className="glass-card rounded-[2.5rem] p-8 border border-white/10 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4">
+                   <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      Verified
+                   </div>
                 </div>
-            </div>
-            <div className="info flex justify-center items-center my-24 mb-32 flex-col gap-2">
-                <div className='font-bold text-lg'>
-
-                    @{username}
-                </div>
-                <div className='text-slate-400'>
-                    Lets help {username} get a Coffee!
-
-                </div>
-                <div className='text-slate-400'>
-                  {payments.length} Payments .   ₹{payments.reduce((a, b) => a + b.amount, 0)} raised
+                
+                <div className="relative inline-block mb-6">
+                   <div className="w-32 h-32 rounded-3xl border-4 border-slate-950 overflow-hidden shadow-2xl mx-auto bg-slate-900 group">
+                     <img src={currentUser.profilepic || "/avatar.gif"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="profile" />
+                   </div>
+                   <motion.div 
+                     animate={{ rotate: 360 }}
+                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                     className="absolute -inset-2 border border-dashed border-indigo-500/30 rounded-full -z-10" 
+                   />
                 </div>
 
-                <div className="payment flex gap-3 w-[80%] mt-11 flex-col md:flex-row">
-                    <div className="supporters w-full md:w-1/2 bg-slate-900 rounded-lg text-white px-2 md:p-10">
-                        {/* Show list of all the supporters as a leaderboard  */}
-                        <h2 className='text-2xl font-bold my-5'> Top 10 Supporters</h2>
-                        <ul className='mx-5 text-lg'>
-                            {payments.length == 0 && <li>No payments yet</li>}
-                            {payments.map((p, i) => {
-                                return <li key={i} className='my-4 flex gap-2 items-center'>
-                                    <img width={33} src="avatar.gif" alt="user avatar" />
-                                    <span>
-                                        {p.name} donated <span className='font-bold'>₹{p.amount}</span> with a message &quot;{p.message}&quot;
-                                    </span>
-                                </li>
-                            })}
+                <h1 className="text-3xl font-black text-white mb-1">{currentUser.name}</h1>
+                <p className="text-indigo-400 font-bold mb-6">@{currentUser.username}</p>
+                
+                <div className="flex justify-center gap-6 py-4 border-y border-white/5 mb-6">
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-tighter">Supporters</p>
+                    <p className="text-xl font-black text-white">{payments.length}</p>
+                  </div>
+                  <div className="w-px h-8 bg-white/5 self-center" />
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-tighter">Joined</p>
+                    <p className="text-xl font-black text-white">
+                      {new Date(currentUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
 
-                        </ul>
+                <p className="text-slate-400 text-sm leading-relaxed text-left italic">
+                  "{currentUser.description || `Hi! I'm creating amazing content and would love your support to keep going. Every chai counts! ☕`}"
+                </p>
+              </div>
+
+              {/* Stats/Badges Card */}
+              <div className="glass-card rounded-[2rem] p-6 border border-white/10 flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-indigo-400" />
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-white">Top 5% Creator</p>
+                    <p className="text-xs text-slate-500">Rising fast in the community</p>
+                 </div>
+              </div>
+            </motion.div>
+
+            {/* Middle Column: Payment & Feed */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-2 space-y-8"
+            >
+              {/* Payment Form Card */}
+              <div className="glass-card rounded-[2.5rem] p-8 border border-white/10 relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <Coffee className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-white">Buy a Chai</h2>
+                </div>
+
+                <div className="grid gap-6 mb-8">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-slate-500 uppercase ml-2">Supporter Name</label>
+                       <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                          <input onChange={handleChange} value={paymentform.name} name='name' type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="Your Name" />
+                       </div>
                     </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-slate-500 uppercase ml-2">Amount (₹)</label>
+                       <div className="relative">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                          <input onChange={handleChange} value={paymentform.amount} name='amount' type="number" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="Enter Amount" />
+                       </div>
+                    </div>
+                  </div>
 
-                    <div className="makePayment w-full md:w-1/2 bg-slate-900 rounded-lg text-white px-2 md:p-10">
-                        <h2 className='text-2xl font-bold my-5'>Make a Payment</h2>
-                        <div className='flex gap-2 flex-col'>
-                            {/* input for name and message   */}
-                            <div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-2">Message (Optional)</label>
+                    <div className="relative">
+                       <MessageCircle className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
+                       <textarea onChange={handleChange} value={paymentform.message} name='message' className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all min-h-[100px] resize-none" placeholder="Say something nice..." />
+                    </div>
+                  </div>
+                </div>
 
-                                <input onChange={handleChange} value={paymentform.name} name='name' type="text" className='w-full p-3 rounded-lg bg-slate-800' placeholder='Enter Name' />
+                <div className="flex flex-wrap gap-3 mb-8">
+                   {[10, 20, 50, 100].map((amt) => (
+                      <button 
+                        key={amt}
+                        onClick={() => pay(amt)}
+                        className="px-6 py-3 rounded-xl bg-white/5 hover:bg-indigo-600 border border-white/5 hover:border-indigo-400 text-sm font-bold text-white transition-all hover:-translate-y-1"
+                      >
+                        ₹{amt}
+                      </button>
+                   ))}
+                </div>
+
+                <button 
+                  onClick={() => pay()}
+                  className="w-full py-5 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg transition-all shadow-2xl shadow-indigo-500/40 flex items-center justify-center gap-3 active:scale-95"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Support Now
+                </button>
+              </div>
+
+              {/* Supporter Feed */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center gap-3">
+                    <Heart className="w-5 h-5 text-rose-500" />
+                    <h2 className="text-xl font-bold text-white">Supporters List</h2>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{payments.length} TOTAL</span>
+                </div>
+
+                <div className="grid gap-4">
+                  <AnimatePresence>
+                    {payments.length === 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="glass-card p-12 rounded-[2rem] border border-dashed border-white/10 text-center"
+                      >
+                        <Coffee className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+                        <p className="text-slate-500 font-medium">Be the first to support {username}!</p>
+                      </motion.div>
+                    ) : (
+                      payments.map((p, i) => (
+                        <motion.div 
+                          key={p._id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          className="glass-card p-6 rounded-[1.5rem] border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors"
+                        >
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0 text-indigo-400 font-bold text-xl">
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                               <h3 className="font-bold text-white">{p.name}</h3>
+                               <div className="px-2 py-1 rounded-lg bg-emerald-500/10 text-[10px] font-black text-emerald-400">
+                                 ₹{p.amount}
+                               </div>
                             </div>
-                            <input onChange={handleChange} value={paymentform.message} name='message' type="text" className='w-full p-3 rounded-lg bg-slate-800' placeholder='Enter Message' />
-
-
-                            <input onChange={handleChange} value={paymentform.amount} name="amount" type="text" className='w-full p-3 rounded-lg bg-slate-800' placeholder='Enter Amount' />
-
-
-                            <button onClick={() => pay(Number.parseInt(paymentform.amount) * 100)} type="button" className="text-white bg-gradient-to-br from-purple-900 to-blue-900 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 disabled:bg-slate-600 disabled:from-purple-100" disabled={paymentform.name?.length < 3 || paymentform.message?.length < 4 || paymentform.amount?.length<1}>Pay</button>
-
-                        </div>
-                        {/* Or choose from these amounts  */}
-                        <div className='flex flex-col md:flex-row gap-2 mt-5'>
-                            <button className='bg-slate-800 p-3 rounded-lg' onClick={() => pay(1000)}>Pay ₹10</button>
-                            <button className='bg-slate-800 p-3 rounded-lg' onClick={() => pay(2000)}>Pay ₹20</button>
-                            <button className='bg-slate-800 p-3 rounded-lg' onClick={() => pay(3000)}>Pay ₹30</button>
-                        </div>
-                    </div>
+                            <p className="text-slate-400 text-sm italic">"{p.message}"</p>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </AnimatePresence>
                 </div>
-            </div>
-        </>
-    )
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
 export default PaymentPage

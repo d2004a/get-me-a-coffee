@@ -4,6 +4,7 @@ import Razorpay from "razorpay"
 import Payment from "@/models/Payment"
 import connectDb from "@/db/connectDb"
 import User from "@/models/User"
+import bcrypt from "bcryptjs"
 
 
 export const initiate = async (amount, to_username, paymentform) => {
@@ -85,5 +86,63 @@ export const updateProfile = async (data, oldusername) => {
     }
 
 
+}
+
+
+export const registerUser = async (data) => {
+    await connectDb()
+    let { name, email, username, password } = data
+
+    // Check if user already exists
+    let existingUser = await User.findOne({ $or: [{ email }, { username }] })
+    if (existingUser) {
+        return { error: "User with this email or username already exists" }
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Create new user
+    await User.create({
+        name,
+        email,
+        username,
+        password: hashedPassword
+    })
+
+    return { success: true }
+}
+
+export const searchCreators = async (query) => {
+    await connectDb()
+    if (!query) return []
+    
+    let creators = await User.find({
+        $or: [
+            { name: { $regex: query, $options: 'i' } },
+            { username: { $regex: query, $options: 'i' } }
+        ]
+    }).limit(10).lean()
+
+    return creators.map(c => ({
+        name: c.name,
+        username: c.username,
+        profilepic: c.profilepic,
+        _id: c._id.toString()
+    }))
+}
+
+export const fetchFeaturedCreators = async () => {
+    await connectDb()
+    // For now, just fetch the first 3 users with profile pics
+    let creators = await User.find({ profilepic: { $exists: true, $ne: "" } }).limit(6).lean()
+    
+    return creators.map(c => ({
+        name: c.name,
+        username: c.username,
+        profilepic: c.profilepic,
+        coverpic: c.coverpic,
+        _id: c._id.toString()
+    }))
 }
 

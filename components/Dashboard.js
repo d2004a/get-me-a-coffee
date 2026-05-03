@@ -1,33 +1,35 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useRouter } from 'next/navigation'
 import { fetchuser, updateProfile } from '@/actions/useractions'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
-
-
+import { Save, User as UserIcon, Mail, AtSign, Image as ImageIcon, CreditCard, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
     const { data: session, update } = useSession()
     const router = useRouter()
     const [form, setform] = useState({})
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        console.log(session)
-
         if (!session) {
             router.push('/login')
-        }
-        else {
+        } else {
             getData()
         }
-    }, [])
+    }, [session, router])
 
     const getData = async () => {
-        let u = await fetchuser(session.user.name)
-        setform(u)
+        try {
+            let u = await fetchuser(session.user.name)
+            setform(u || {})
+        } catch (error) {
+            console.error("Failed to load user data:", error)
+        }
     }
 
     const handleChange = (e) => {
@@ -35,94 +37,144 @@ const Dashboard = () => {
     }
 
     const handleSubmit = async (e) => {
-
+        setLoading(true)
         let a = await updateProfile(e, session.user.name)
-        toast('Profile Updated', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            transition: Bounce,
+        if (a?.error) {
+            toast.error(a.error)
+        } else {
+            toast.success('Profile Updated Successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                theme: "dark",
+                transition: Bounce,
             });
+        }
+        setLoading(false)
     }
 
-
-
-
-
     return (
-        <>
-            <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-            />
-            {/* Same as */}
+        <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
             <ToastContainer />
-            <div className='container mx-auto py-5 px-6 '>
-                <h1 className='text-center my-5 text-3xl font-bold'>Welcome to your Dashboard</h1>
+            
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-4xl mx-auto"
+            >
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-extrabold text-white mb-2">Creator Dashboard</h1>
+                    <p className="text-slate-400">Manage your profile and payment settings</p>
+                </div>
 
-                <form className="max-w-2xl mx-auto" action={handleSubmit}>
-
-                    <div className='my-2'>
-                        <label htmlFor="name" className="block mb-2 text-sm font-medium text-white">Name</label>
-                        <input value={form.name ? form.name : ""} onChange={handleChange} type="text" name='name' id="name" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-                    {/* input for email */}
-                    <div className="my-2">
-                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-white">Email</label>
-                        <input value={form.email ? form.email : ""} onChange={handleChange} type="email" name='email' id="email" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-                    {/* input forusername */}
-                    <div className='my-2'>
-                        <label htmlFor="username" className="block mb-2 text-sm font-medium text-white">Username</label>
-                        <input value={form.username ? form.username : ""} onChange={handleChange} type="text" name='username' id="username" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-                    {/* input for profile picture of input type text */}
-                    <div className="my-2">
-                        <label htmlFor="profilepic" className="block mb-2 text-sm font-medium text-white">Profile Picture</label>
-                        <input value={form.profilepic ? form.profilepic : ""} onChange={handleChange} type="text" name='profilepic' id="profilepic" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-
-                    {/* input for cover pic  */}
-                    <div className="my-2">
-                        <label htmlFor="coverpic" className="block mb-2 text-sm font-medium text-white">Cover Picture</label>
-                        <input value={form.coverpic ? form.coverpic : ""} onChange={handleChange} type="text" name='coverpic' id="coverpic" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-                    {/* input razorpay id */}
-                    <div className="my-2">
-                        <label htmlFor="razorpayid" className="block mb-2 text-sm font-medium text-white">Razorpay Id</label>
-                        <input value={form.razorpayid ? form.razorpayid : ""} onChange={handleChange} type="text" name='razorpayid' id="razorpayid" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-                    {/* input razorpay secret */}
-                    <div className="my-2">
-                        <label htmlFor="razorpaysecret" className="block mb-2 text-sm font-medium text-white">Razorpay Secret</label>
-                        <input value={form.razorpaysecret ? form.razorpaysecret : ""} onChange={handleChange} type="text" name='razorpaysecret' id="razorpaysecret" className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-                    </div>
-
-                    {/* Submit Button  */}
-                    <div className="my-6">
-                
-                        <button   type="submit" className="block w-full p-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:ring-blue-500 focus:ring-4 focus:outline-none   dark:focus:ring-blue-800 font-medium text-sm">Save</button>
+                <form action={handleSubmit} className="space-y-8">
+                    {/* Profile Section */}
+                    <div className="glass-card rounded-3xl p-8 border border-white/10">
+                        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                            <UserIcon className="w-5 h-5 text-indigo-400" />
+                            <h2 className="text-xl font-bold text-white">Profile Information</h2>
+                        </div>
                         
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Full Name</label>
+                                <div className="relative">
+                                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.name || ""} onChange={handleChange} type="text" name='name' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="Enter your name" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Email Address</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.email || ""} onChange={handleChange} type="email" name='email' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="your@email.com" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Username</label>
+                                <div className="relative">
+                                    <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.username || ""} onChange={handleChange} type="text" name='username' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="username" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Profile Picture URL</label>
+                                <div className="relative">
+                                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.profilepic || ""} onChange={handleChange} type="text" name='profilepic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="https://..." />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-2">
+                            <label className="text-sm font-medium text-slate-400 ml-1">Cover Image URL</label>
+                            <div className="relative">
+                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                <input value={form.coverpic || ""} onChange={handleChange} type="text" name='coverpic' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="https://..." />
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-2">
+                            <label className="text-sm font-medium text-slate-400 ml-1">Bio / Description</label>
+                            <div className="relative">
+                                <textarea 
+                                    value={form.description || ""} 
+                                    onChange={handleChange} 
+                                    name='description' 
+                                    rows="3"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none" 
+                                    placeholder="Tell your supporters about yourself..." 
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Section */}
+                    <div className="glass-card rounded-3xl p-8 border border-white/10">
+                        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                            <CreditCard className="w-5 h-5 text-emerald-400" />
+                            <h2 className="text-xl font-bold text-white">Payment Settings</h2>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Razorpay Key ID</label>
+                                <div className="relative">
+                                    <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.razorpayid || ""} onChange={handleChange} type="text" name='razorpayid' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="rzp_test_..." />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 ml-1">Razorpay Secret</label>
+                                <div className="relative">
+                                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input value={form.razorpaysecret || ""} onChange={handleChange} type="password" name='razorpaysecret' className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="••••••••••••" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <button 
+                            type="submit" 
+                            disabled={loading}
+                            className="flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-500/25"
+                        >
+                            {loading ? "Saving Changes..." : "Save Profile Settings"}
+                            <Save className="w-5 h-5" />
+                        </button>
                     </div>
                 </form>
-
-
-            </div>
-        </>
+            </motion.div>
+        </div>
     )
 }
 
-export default Dashboard
+export default Dashboard
